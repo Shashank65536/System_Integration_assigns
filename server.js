@@ -68,6 +68,17 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
+
+/**
+ * @swagger
+ * /company:
+ *   get:
+ *     summary: Get a list of companies
+ *     description: Retrieve a list of all companies.
+ *     responses:
+ *       200:
+ *         description: A list of companies
+ */
 app.get('/company', async (req, res) => {
   try {
    
@@ -81,6 +92,16 @@ app.get('/company', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /customer:
+ *   get:
+ *     summary: Get a list of customers
+ *     description: Retrieve a list of all customers.
+ *     responses:
+ *       200:
+ *         description: A list of customers
+ */
 app.get('/customer', async (req, res) => {
   try {
   
@@ -93,6 +114,46 @@ app.get('/customer', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+/**
+ * @swagger
+ * /company:
+ *   post:
+ *     summary: Create a new company.
+ *     description: Create a new company with the provided data.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NewCompany'
+ *     responses:
+ *       201:
+ *         description: Company created successfully
+ *       400:
+ *         description: Bad request, invalid input data
+ * components:
+ *   schemas:
+ *     NewCompany:
+ *       type: object
+ *       required:
+ *         - company_name
+ *         - company_city
+ *       properties:
+ *         company_id:
+ *           type: integer
+ *           description: The company ID
+ *         company_name:
+ *           type: string
+ *           description: The company name
+ *         company_city:
+ *           type: string
+ *           description: The city where the company is located
+ *       example:
+ *         company_id: 1223
+ *         company_name: "abcd"
+ *         company_city: "Charlotte"
+ */
 
 app.post('/company', async (req, res) => {
   console.log(req.body);
@@ -116,6 +177,49 @@ app.post('/company', async (req, res) => {
   } catch (err) {
     console.error('Error creating company:', err);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+/**
+ * @swagger
+ * /companies/{id}:
+ *   delete:
+ *     summary: Delete a company by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the company to delete.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Company deleted successfully.
+ *       404:
+ *         description: Company not found.
+ *       500:
+ *         description: Internal server error.
+ */
+app.delete('/companies/:id', async (req, res) => {
+  const companyId = parseInt(req.params.id);
+
+  const connection = await pool.getConnection();
+  const deleteQuery = 'DELETE FROM company WHERE COMPANY_ID = ?';
+
+  try {
+    
+    const result = await connection.query(deleteQuery, [companyId]);
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Company not found' });
+      return;
+    }
+
+    res.json({ message: 'Company deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting company:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
